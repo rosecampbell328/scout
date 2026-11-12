@@ -17,8 +17,13 @@ import { Button } from "@/components/Button";
 import { PinPhoto } from "@/components/PinPhoto";
 import { ScoutMap, type ScoutMapRef } from "@/components/ScoutMap";
 import { SearchField } from "@/components/SearchField";
+import {
+  SuggestionList,
+  type SuggestionRow,
+} from "@/components/SuggestionList";
 import { pinMatches, usePins } from "@/data/pins";
 import type { Pin } from "@/data/types";
+import { usePlaceSuggestions, type PlaceSuggestion } from "@/lib/places";
 import { colors, fonts, labelText, palette, spacing } from "@/theme";
 
 type Coord = { latitude: number; longitude: number };
@@ -48,6 +53,11 @@ export default function MapScreen() {
     ? pins.filter((p) => pinMatches(p, trimmed)).slice(0, 5)
     : [];
   const showSuggestions = searchFocused && trimmed.length > 0;
+  const { suggestions: cities, loading: citiesLoading } = usePlaceSuggestions(
+    query,
+    "city",
+    searchFocused,
+  );
 
   const zoomTo = (coord: Coord, delta: number) =>
     mapRef.current?.animateToRegion(
@@ -62,9 +72,36 @@ export default function MapScreen() {
     zoomTo(pin, PIN_DELTA);
   };
 
-  /** Look the query up as a place (city, address, landmark) and zoom there. */
+  const goToCity = (city: PlaceSuggestion) => {
+    Keyboard.dismiss();
+    setSearchFocused(false);
+    setSelected(null);
+    setQuery(city.subtitle ? `${city.title}, ${city.subtitle}` : city.title);
+    const b = city.bounds;
+    if (b) {
+      const latitudeDelta = Math.max((b.maxLat - b.minLat) * 1.2, PIN_DELTA);
+      const longitudeDelta = Math.max((b.maxLon - b.minLon) * 1.2, PIN_DELTA);
+      mapRef.current?.animateToRegion(
+        {
+          latitude: (b.minLat + b.maxLat) / 2,
+          longitude: (b.minLon + b.maxLon) / 2,
+          latitudeDelta,
+          longitudeDelta,
+        },
+        700,
+      );
+    } else {
+      zoomTo(city, CITY_DELTA);
+    }
+  };
+
+  /** Search button: use the top city suggestion, else ask the phone's geocoder. */
   const searchPlace = async () => {
     if (!trimmed) return;
+    if (cities.length > 0) {
+      goToCity(cities[0]);
+      return;
+    }
     Keyboard.dismiss();
     setSearchFocused(false);
     setSelected(null);
@@ -146,40 +183,31 @@ export default function MapScreen() {
         </AppHeader>
 
         {showSuggestions && (
-          <View style={styles.suggestions}>
-            <Pressable style={styles.suggestion} onPress={searchPlace}>
-              <Ionicons
-                name="navigate-outline"
-                size={16}
-                color={colors.textMuted}
-              />
-              <Text style={styles.suggestionText} numberOfLines={1}>
-                Go to “{trimmed}”
-              </Text>
-            </Pressable>
-            {matches.map((pin) => (
-              <Pressable
-                key={pin.id}
-                style={styles.suggestion}
-                onPress={() => goToPin(pin)}
-              >
-                <Ionicons name="location" size={16} color={colors.pin} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.suggestionText} numberOfLines={1}>
-                    {pin.title}
-                  </Text>
-                  {pin.tags.length > 0 && (
-                    <Text
-                      style={[labelText, styles.suggestionMeta]}
-                      numberOfLines={1}
-                    >
-                      {pin.tags.join(" · ")}
-                    </Text>
-                  )}
-                </View>
-              </Pressable>
-            ))}
-          </View>
+          <SuggestionList
+            style={styles.suggestions}
+            loading={citiesLoading && matches.length === 0}
+            headings={{
+              ...(cities[0] && { [`city-${cities[0].id}`]: "Places" }),
+              ...(matches[0] && { [`pin-${matches[0].id}`]: "Scout pins" }),
+            }}
+            rows={[
+              ...cities.map<SuggestionRow>((c) => ({
+                key: `city-${c.id}`,
+                title: c.title,
+                subtitle: c.subtitle,
+                icon: "navigate-outline",
+                onPress: () => goToCity(c),
+              })),
+              ...matches.map<SuggestionRow>((pin) => ({
+                key: `pin-${pin.id}`,
+                title: pin.title,
+                subtitle: pin.address || pin.tags.join(" · "),
+                icon: "location",
+                iconColor: colors.pin,
+                onPress: () => goToPin(pin),
+              })),
+            ]}
+          />
         )}
       </View>
 
@@ -236,29 +264,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.background,
   },
-  suggestions: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  suggestion: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.divider,
-  },
-  suggestionText: {
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.text,
-    flexShrink: 1,
-  },
-  suggestionMeta: { fontSize: 9, color: colors.textMuted, marginTop: 2 },
+  suggestions: { marginHorizontal: spacing.md, marginBottom: spacing.sm },
   searching: { position: "absolute", top: "50%", alignSelf: "center" },
   bottom: {
     position: "absolute",

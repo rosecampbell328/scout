@@ -9,8 +9,8 @@ export type ScoutMapRef = MapView;
 
 const PIN_IMAGE = require("@/assets/images/pin.png");
 /** Size of pin.png in points. */
-const PIN_WIDTH = 26;
-const PIN_HEIGHT = 38;
+const PIN_WIDTH = 19;
+const PIN_HEIGHT = 28;
 
 /** Roughly centered on the contiguous United States. */
 export const US_REGION: Region = {

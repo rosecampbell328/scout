@@ -19,12 +19,15 @@ const PinsContext = createContext<PinsContextValue | null>(null);
 /**
  * Upgrade pins saved by earlier versions:
  * - pins saved before `ownerId` existed: anything that isn't a seed pin was made on this device
+ * - pins saved before `address` existed: starter pins get theirs, others get ""
  * - add any starter pins that were added to the app after the data was first saved
  */
 const migratePins = (stored: Pin[]) => {
-  const pins = stored.map((p) =>
-    p.ownerId ? p : { ...p, ownerId: p.id.startsWith("seed-") ? "scout" : ME },
-  );
+  const pins = stored.map((p) => ({
+    ...p,
+    ownerId: p.ownerId ?? (p.id.startsWith("seed-") ? "scout" : ME),
+    address: p.address ?? seedPins.find((s) => s.id === p.id)?.address ?? "",
+  }));
   const ids = new Set(pins.map((p) => p.id));
   return [...pins, ...seedPins.filter((s) => !ids.has(s.id))];
 };

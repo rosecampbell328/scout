@@ -53,9 +53,7 @@ export function ScoutMap({ pins, onPinPress }: Props) {
           style={styles.row}
         >
           <Text style={styles.title}>{pin.title}</Text>
-          <Text style={labelText}>
-            {pin.latitude.toFixed(3)}, {pin.longitude.toFixed(3)}
-          </Text>
+          <Text style={labelText}>{pin.address}</Text>
         </Pressable>
       ))}
       <View style={{ height: 120 }} />
