@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Scout",
+    "slug": "scout",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "scheme": "scout",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F4F4F0",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -28,15 +28,31 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F4F4F0",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Scout uses your location to show nearby shoot spots and to pin where you are."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Scout needs your photos so you can show what a location looks like.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "react-native-maps"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "backgroundColor": "#F4F4F0"
   }
 }
