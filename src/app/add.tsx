@@ -19,6 +19,13 @@ import { Button } from "@/components/Button";
 import { PinPhoto } from "@/components/PinPhoto";
 import { usePins } from "@/data/pins";
 import { useProfile } from "@/data/profile";
+import {
+  addressFromCoords,
+  searchPlaces,
+  usePlaceSuggestions,
+  type PlaceSuggestion,
+} from "@/lib/places";
+import { SuggestionList } from "@/components/SuggestionList";
 import { colors, fonts, labelText, spacing } from "@/theme";
 
 type Coord = { latitude: number; longitude: number };
@@ -32,32 +39,65 @@ export default function AddPin() {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [coord, setCoord] = useState<Coord | null>(
+  const fromMap =
     params.lat && params.lng
       ? { latitude: Number(params.lat), longitude: Number(params.lng) }
-      : null,
-  );
-  const [locating, setLocating] = useState(coord === null);
+      : null;
+  const [coord, setCoord] = useState<Coord | null>(fromMap);
+  const [address, setAddress] = useState("");
+  /** The user typed in the address field since it was last filled in for them. */
+  const [addressEdited, setAddressEdited] = useState(false);
+  const [addressFocused, setAddressFocused] = useState(false);
+  const [locating, setLocating] = useState(true);
+  const [saving, setSaving] = useState(false);
 
+  const { suggestions, loading: suggestionsLoading } = usePlaceSuggestions(
+    address,
+    "address",
+    addressFocused && addressEdited,
+  );
+
+  /** Fill in coordinates + address from the photographer's current spot. */
   const locateMe = () => {
     setLocating(true);
     getMyCoord()
-      .then((c) => c && setCoord(c))
+      .then(async (c) => {
+        if (!c) return;
+        setCoord(c);
+        setAddress(await addressFromCoords(c));
+        setAddressEdited(false);
+      })
       .finally(() => setLocating(false));
   };
 
-  // No coordinate passed in from the map → default to the photographer's current spot.
+  // Pre-fill the address: from the long-pressed spot, or the photographer's current location.
   useEffect(() => {
-    if (coord) return;
     let active = true;
-    getMyCoord()
-      .then((c) => active && c && setCoord(c))
+    const lookup = fromMap
+      ? Promise.resolve(fromMap)
+      : getMyCoord().then((c) => {
+          if (active && c) setCoord(c);
+          return c;
+        });
+    lookup
+      .then((c) => (c ? addressFromCoords(c) : ""))
+      .then((a) => {
+        // Don't overwrite anything the user already typed.
+        if (active && a) setAddress((current) => current || a);
+      })
       .finally(() => active && setLocating(false));
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const pickSuggestion = (place: PlaceSuggestion) => {
+    setAddress(place.address);
+    setCoord({ latitude: place.latitude, longitude: place.longitude });
+    setAddressEdited(false);
+    setAddressFocused(false);
+  };
 
   const pickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -69,10 +109,25 @@ export default function AddPin() {
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
   };
 
-  const canSave = title.trim().length > 0 && coord !== null;
+  const canSave =
+    title.trim().length > 0 && (coord !== null || address.trim().length > 0);
 
-  const save = () => {
-    if (!coord) return;
+  const save = async () => {
+    let location = coord;
+    // A typed address that wasn't picked from the list: look it up, unless the
+    // pin was dropped on the map (then the dropped spot wins).
+    if (address.trim() && addressEdited && (!fromMap || !coord)) {
+      setSaving(true);
+      location = (await geocodeAddress(address.trim())) ?? coord;
+      setSaving(false);
+    }
+    if (!location) {
+      Alert.alert(
+        "Address not found",
+        "Pick an address from the suggestions, or tap “Use my location”.",
+      );
+      return;
+    }
     const pin = addPin({
       title: title.trim(),
       description: description.trim(),
@@ -82,7 +137,9 @@ export default function AddPin() {
         .filter(Boolean),
       author: displayName,
       photoUri,
-      ...coord,
+      address: address.trim(),
+      latitude: location.latitude,
+      longitude: location.longitude,
     });
     router.dismissTo(`/pin/${pin.id}`);
   };
@@ -132,6 +189,50 @@ export default function AddPin() {
           />
         </Field>
 
+        <Field label="Address">
+          <View style={styles.addressRow}>
+            <TextInput
+              value={address}
+              onChangeText={(text) => {
+                setAddress(text);
+                setAddressEdited(true);
+              }}
+              onFocus={() => setAddressFocused(true)}
+              placeholder={
+                locating ? "Finding address…" : "Start typing an address"
+              }
+              placeholderTextColor={colors.accentSoft}
+              style={[styles.input, styles.addressInput]}
+              autoCorrect={false}
+              textContentType="fullStreetAddress"
+            />
+            {locating ? (
+              <ActivityIndicator
+                color={colors.accent}
+                style={styles.addressIcon}
+              />
+            ) : null}
+          </View>
+          {addressFocused && addressEdited ? (
+            <SuggestionList
+              style={styles.addressSuggestions}
+              loading={suggestionsLoading}
+              rows={suggestions.map((p) => ({
+                key: p.id,
+                title: p.title,
+                subtitle: p.subtitle,
+                icon: "location-outline",
+                onPress: () => pickSuggestion(p),
+              }))}
+            />
+          ) : null}
+          <Pressable onPress={locateMe} hitSlop={8} style={styles.useLocation}>
+            <Text style={[labelText, { fontSize: 10, color: colors.accent }]}>
+              Use my location
+            </Text>
+          </Pressable>
+        </Field>
+
         <Field label="Notes">
           <TextInput
             value={description}
@@ -154,31 +255,12 @@ export default function AddPin() {
           />
         </Field>
 
-        <Field label="Coordinates">
-          <View style={styles.coordRow}>
-            {locating ? (
-              <ActivityIndicator color={colors.accent} />
-            ) : (
-              <Text style={styles.coordText}>
-                {coord
-                  ? `${coord.latitude.toFixed(4)}°, ${coord.longitude.toFixed(4)}°`
-                  : "Not set"}
-              </Text>
-            )}
-            <Pressable onPress={locateMe} hitSlop={8}>
-              <Text style={[labelText, { fontSize: 10, color: colors.accent }]}>
-                Use my location
-              </Text>
-            </Pressable>
-          </View>
-        </Field>
-
         <Text style={styles.postingAs}>posting as {displayName}</Text>
 
         <Button
           title="Pin this location"
           onPress={save}
-          disabled={!canSave}
+          disabled={!canSave || saving}
           style={{ marginTop: spacing.sm }}
         />
       </ScrollView>
@@ -207,6 +289,23 @@ async function getMyCoord(): Promise<Coord | null> {
     );
     return null;
   }
+}
+
+/** Look up a typed address: Photon first, then the phone's own geocoder. */
+async function geocodeAddress(address: string): Promise<Coord | null> {
+  try {
+    const [first] = await searchPlaces(address, "address");
+    if (first) return { latitude: first.latitude, longitude: first.longitude };
+  } catch {
+    // fall through
+  }
+  try {
+    const [hit] = await Location.geocodeAsync(address);
+    if (hit) return { latitude: hit.latitude, longitude: hit.longitude };
+  } catch {
+    // not found
+  }
+  return null;
 }
 
 function Field({
@@ -265,20 +364,15 @@ const styles = StyleSheet.create({
     borderColor: colors.text,
   },
   multiline: { minHeight: 72, textAlignVertical: "top" },
-  coordRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.text,
-    minHeight: 40,
-  },
+  addressRow: { flexDirection: "row", alignItems: "center" },
+  addressInput: { flex: 1 },
+  addressIcon: { position: "absolute", right: 0 },
+  addressSuggestions: { marginTop: spacing.xs },
+  useLocation: { alignSelf: "flex-start", marginTop: spacing.sm },
   postingAs: {
     fontFamily: fonts.displayItalic,
     fontSize: 16,
     color: colors.textMuted,
     marginTop: spacing.lg,
   },
-  coordText: { fontFamily: fonts.body, fontSize: 16, color: colors.text },
 });

@@ -46,8 +46,8 @@ export default function PinDetail() {
 
       <View style={styles.body}>
         <View style={styles.metaRow}>
-          <Text style={[labelText, styles.meta]}>
-            {pin.latitude.toFixed(4)}°, {pin.longitude.toFixed(4)}°
+          <Text style={styles.address} numberOfLines={2}>
+            {pin.address}
           </Text>
           <Pressable
             onPress={() => toggleFavorite(pin.id)}
@@ -120,7 +120,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  meta: { color: colors.textMuted, fontSize: 10 },
+  address: {
+    flex: 1,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textSubtle,
+    paddingRight: spacing.md,
+  },
   authorLink: {
     fontFamily: fonts.display,
     color: colors.text,

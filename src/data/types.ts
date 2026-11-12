@@ -7,6 +7,8 @@ export type Pin = {
   description: string;
   latitude: number;
   longitude: number;
+  /** One-line street address shown on the location page. */
+  address: string;
   /** Local file URI or remote URL of the location photo. */
   photoUri: string | null;
   /** Free-text tags such as "golden hour", "urban", "florals". */
