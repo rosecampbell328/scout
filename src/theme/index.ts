@@ -17,25 +17,27 @@ export const palette = {
   dusk: "#97A6BB",
   espresso: "#483A2A",
   taupe: "#675E52",
+  /** Brand accent: headings, text, buttons, active icons. */
+  brown: "#453A2C",
 } as const;
 
 export const colors = {
   background: palette.linen,
   surface: palette.ivory,
   surfaceCool: palette.ice,
-  text: palette.ink,
+  text: palette.brown,
   textMuted: palette.taupe,
-  textSubtle: palette.slate,
+  textSubtle: palette.brown,
   border: palette.stone,
   divider: palette.fog,
-  accent: palette.espresso,
+  accent: palette.brown,
   accentSoft: palette.dusk,
-  button: palette.charcoal,
+  button: palette.brown,
   buttonText: palette.ivory,
   placeholder: palette.mist,
   /** Map pins and the favorite heart. */
   pin: "#EC1F27",
-  tabActive: palette.ink,
+  tabActive: palette.brown,
   tabInactive: palette.taupe,
 } as const;
 

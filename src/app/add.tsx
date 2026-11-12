@@ -240,7 +240,11 @@ export default function AddPin() {
             placeholder="Best time of day, parking, permits…"
             placeholderTextColor={colors.accentSoft}
             style={[styles.input, styles.multiline]}
+            // Starts one line tall and grows with the text; Return closes the keyboard.
             multiline
+            scrollEnabled={false}
+            submitBehavior="blurAndSubmit"
+            returnKeyType="done"
           />
         </Field>
 
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: colors.text,
   },
-  multiline: { minHeight: 72, textAlignVertical: "top" },
+  multiline: { textAlignVertical: "top" },
   addressRow: { flexDirection: "row", alignItems: "center" },
   addressInput: { flex: 1 },
   addressIcon: { position: "absolute", right: 0 },
