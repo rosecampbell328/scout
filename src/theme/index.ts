@@ -34,7 +34,7 @@ export const colors = {
   buttonText: palette.ivory,
   placeholder: palette.mist,
   /** Map pins and the favorite heart. */
-  pin: "#C8352B",
+  pin: "#EC1F27",
   tabActive: palette.ink,
   tabInactive: palette.taupe,
 } as const;

@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Linking,
   Platform,
@@ -41,34 +41,40 @@ export default function PinDetail() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Stack.Screen
-        options={{
-          title: "",
-          headerRight: () => (
-            <Pressable
-              onPress={() => toggleFavorite(pin.id)}
-              hitSlop={10}
-              accessibilityLabel={
-                favorite ? "Remove from favorites" : "Add to favorites"
-              }
-            >
-              <Ionicons
-                name={favorite ? "heart" : "heart-outline"}
-                size={26}
-                color={favorite ? colors.pin : colors.text}
-              />
-            </Pressable>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ title: "" }} />
       <PinPhoto uri={pin.photoUri} />
 
       <View style={styles.body}>
-        <Text style={[labelText, styles.meta]}>
-          {pin.latitude.toFixed(4)}°, {pin.longitude.toFixed(4)}°
-        </Text>
+        <View style={styles.metaRow}>
+          <Text style={[labelText, styles.meta]}>
+            {pin.latitude.toFixed(4)}°, {pin.longitude.toFixed(4)}°
+          </Text>
+          <Pressable
+            onPress={() => toggleFavorite(pin.id)}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel={
+              favorite ? "Remove from favorites" : "Add to favorites"
+            }
+          >
+            <Ionicons
+              name={favorite ? "heart" : "heart-outline"}
+              size={28}
+              color={favorite ? colors.pin : colors.text}
+            />
+          </Pressable>
+        </View>
         <Text style={styles.title}>{pin.title}</Text>
-        <Text style={styles.byline}>scouted by {pin.author}</Text>
+        <Text style={styles.byline}>
+          scouted by{" "}
+          <Text
+            style={styles.authorLink}
+            onPress={() => router.push(`/user/${pin.ownerId}`)}
+            accessibilityRole="link"
+          >
+            {pin.author}
+          </Text>
+        </Text>
 
         {pin.description ? (
           <Text style={styles.description}>{pin.description}</Text>
@@ -84,28 +90,11 @@ export default function PinDetail() {
           </View>
         )}
 
-        <Pressable
-          onPress={() => toggleFavorite(pin.id)}
-          style={({ pressed }) => [
-            styles.favButton,
-            favorite && styles.favButtonOn,
-            pressed && { opacity: 0.75 },
-          ]}
-          accessibilityRole="button"
-        >
-          <Ionicons
-            name={favorite ? "heart" : "heart-outline"}
-            size={18}
-            color={favorite ? colors.buttonText : colors.text}
-          />
-          <Text style={[labelText, favorite && { color: colors.buttonText }]}>
-            {favorite ? "Saved to favorites" : "Add to favorites"}
-          </Text>
-        </Pressable>
         <Button
           title="Get directions"
           variant="outline"
           onPress={openDirections}
+          style={{ marginTop: spacing.lg }}
         />
       </View>
     </ScrollView>
@@ -121,8 +110,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.background,
   },
-  body: { padding: spacing.lg, gap: spacing.sm },
+  body: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   meta: { color: colors.textMuted, fontSize: 10 },
+  authorLink: {
+    fontFamily: fonts.display,
+    color: colors.text,
+    textDecorationLine: "underline",
+  },
   title: {
     fontFamily: fonts.display,
     fontSize: 36,
@@ -147,18 +150,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
   },
-  favButton: {
-    marginTop: spacing.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: 15,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.text,
-  },
-  favButtonOn: { backgroundColor: colors.button, borderColor: colors.button },
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
