@@ -15,7 +15,7 @@ type Filter = "all" | "locations" | "people";
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "locations", label: "Locations" },
-  { key: "people", label: "Photographers" },
+  { key: "people", label: "Profiles" },
 ];
 
 export default function SearchScreen() {
@@ -63,9 +63,7 @@ export default function SearchScreen() {
         keyboardDismissMode="on-drag"
       >
         {peopleHits.length > 0 && (
-          <Section
-            title={trimmed ? "Photographers" : "Suggested profiles"}
-          >
+          <Section title={trimmed ? "Photographers" : "Suggested profiles"}>
             {peopleHits.map((person) => (
               <PersonRow
                 key={person.id}
