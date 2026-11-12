@@ -58,6 +58,7 @@ export default function RootLayout() {
             options={{ presentation: "modal", title: "Edit Profile" }}
           />
           <Stack.Screen name="pin/[id]" options={{ title: "" }} />
+          <Stack.Screen name="user/[id]" options={{ title: "" }} />
         </Stack>
       </PinsProvider>
     </ProfileProvider>

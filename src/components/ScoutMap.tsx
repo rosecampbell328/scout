@@ -3,10 +3,13 @@ import { Platform, StyleSheet } from "react-native";
 import MapView, { Marker, type Region } from "react-native-maps";
 
 import type { Pin } from "@/data/types";
-import { colors } from "@/theme";
 import { mapStyle } from "@/theme/mapStyle";
 
 export type ScoutMapRef = MapView;
+
+const PIN_IMAGE = require("@/assets/images/pin.png");
+/** Height of pin.png in points. */
+const PIN_HEIGHT = 38;
 
 /** Roughly centered on the contiguous United States. */
 export const US_REGION: Region = {
@@ -52,7 +55,10 @@ export function ScoutMap({
         <Marker
           key={pin.id}
           coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
-          pinColor={colors.pin}
+          image={PIN_IMAGE}
+          // Put the pin's tip (bottom center) on the coordinate.
+          anchor={{ x: 0.5, y: 1 }}
+          centerOffset={{ x: 0, y: -PIN_HEIGHT / 2 }}
           stopPropagation
           onPress={() => onPinPress(pin)}
         />
