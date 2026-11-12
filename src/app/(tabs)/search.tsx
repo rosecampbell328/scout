@@ -64,7 +64,7 @@ export default function SearchScreen() {
       >
         {peopleHits.length > 0 && (
           <Section
-            title={trimmed ? "Photographers" : "Photographers to follow"}
+            title={trimmed ? "Photographers" : "Suggested profiles"}
           >
             {peopleHits.map((person) => (
               <PersonRow
@@ -77,7 +77,7 @@ export default function SearchScreen() {
         )}
 
         {pinHits.length > 0 && (
-          <Section title={trimmed ? "Locations" : "All locations"}>
+          <Section title={trimmed ? "Locations" : "Suggested locations"}>
             {pinHits.map((pin) => (
               <PinRow key={pin.id} pin={pin} />
             ))}
