@@ -16,11 +16,18 @@ type PinsContextValue = {
 
 const PinsContext = createContext<PinsContextValue | null>(null);
 
-/** Pins saved before `ownerId` existed: anything that isn't a seed pin was made on this device. */
-const migratePins = (pins: Pin[]) =>
-  pins.map((p) =>
+/**
+ * Upgrade pins saved by earlier versions:
+ * - pins saved before `ownerId` existed: anything that isn't a seed pin was made on this device
+ * - add any starter pins that were added to the app after the data was first saved
+ */
+const migratePins = (stored: Pin[]) => {
+  const pins = stored.map((p) =>
     p.ownerId ? p : { ...p, ownerId: p.id.startsWith("seed-") ? "scout" : ME },
   );
+  const ids = new Set(pins.map((p) => p.id));
+  return [...pins, ...seedPins.filter((s) => !ids.has(s.id))];
+};
 
 /**
  * Pin + favorites store. Currently persists on-device with AsyncStorage.
