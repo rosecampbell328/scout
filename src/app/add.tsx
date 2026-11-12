@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -31,24 +31,33 @@ import { colors, fonts, labelText, spacing } from "@/theme";
 type Coord = { latitude: number; longitude: number };
 
 export default function AddPin() {
-  const params = useLocalSearchParams<{ lat?: string; lng?: string }>();
-  const { addPin } = usePins();
+  const params = useLocalSearchParams<{
+    lat?: string;
+    lng?: string;
+    /** Set when editing an existing pin. */
+    id?: string;
+  }>();
+  const { addPin, updatePin, getPin } = usePins();
   const { displayName } = useProfile();
+  const editing = params.id ? getPin(params.id) : undefined;
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const fromMap =
-    params.lat && params.lng
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [tags, setTags] = useState(editing?.tags.join(", ") ?? "");
+  const [photoUri, setPhotoUri] = useState<string | null>(
+    editing?.photoUri ?? null,
+  );
+  const fromMap = editing
+    ? { latitude: editing.latitude, longitude: editing.longitude }
+    : params.lat && params.lng
       ? { latitude: Number(params.lat), longitude: Number(params.lng) }
       : null;
   const [coord, setCoord] = useState<Coord | null>(fromMap);
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(editing?.address ?? "");
   /** The user typed in the address field since it was last filled in for them. */
   const [addressEdited, setAddressEdited] = useState(false);
   const [addressFocused, setAddressFocused] = useState(false);
-  const [locating, setLocating] = useState(true);
+  const [locating, setLocating] = useState(!editing);
   const [saving, setSaving] = useState(false);
 
   const { suggestions, loading: suggestionsLoading } = usePlaceSuggestions(
@@ -72,6 +81,7 @@ export default function AddPin() {
 
   // Pre-fill the address: from the long-pressed spot, or the photographer's current location.
   useEffect(() => {
+    if (editing) return;
     let active = true;
     const lookup = fromMap
       ? Promise.resolve(fromMap)
@@ -115,8 +125,9 @@ export default function AddPin() {
   const save = async () => {
     let location = coord;
     // A typed address that wasn't picked from the list: look it up, unless the
-    // pin was dropped on the map (then the dropped spot wins).
-    if (address.trim() && addressEdited && (!fromMap || !coord)) {
+    // pin was dropped on the map (then the dropped spot wins). When editing,
+    // a changed address moves the pin.
+    if (address.trim() && addressEdited && (editing || !fromMap || !coord)) {
       setSaving(true);
       location = (await geocodeAddress(address.trim())) ?? coord;
       setSaving(false);
@@ -128,19 +139,24 @@ export default function AddPin() {
       );
       return;
     }
-    const pin = addPin({
+    const fields = {
       title: title.trim(),
       description: description.trim(),
       tags: tags
         .split(",")
         .map((t) => t.trim().toLowerCase())
         .filter(Boolean),
-      author: displayName,
       photoUri,
       address: address.trim(),
       latitude: location.latitude,
       longitude: location.longitude,
-    });
+    };
+    if (editing) {
+      updatePin(editing.id, fields);
+      router.back();
+      return;
+    }
+    const pin = addPin({ ...fields, author: displayName });
     router.dismissTo(`/pin/${pin.id}`);
   };
 
@@ -154,6 +170,7 @@ export default function AddPin() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
+        {editing ? <Stack.Screen options={{ title: "Edit Location" }} /> : null}
         <Pressable
           onPress={pickPhoto}
           accessibilityRole="button"
@@ -259,10 +276,12 @@ export default function AddPin() {
           />
         </Field>
 
-        <Text style={styles.postingAs}>posting as {displayName}</Text>
+        {editing ? null : (
+          <Text style={styles.postingAs}>posting as {displayName}</Text>
+        )}
 
         <Button
-          title="Pin this location"
+          title={editing ? "Save changes" : "Pin this location"}
           onPress={save}
           disabled={!canSave || saving}
           style={{ marginTop: spacing.sm }}

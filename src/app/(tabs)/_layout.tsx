@@ -6,7 +6,7 @@ import { StyleSheet, View } from "react-native";
 import { useProfile } from "@/data/profile";
 import { colors } from "@/theme";
 
-/** Instagram-style bottom bar: Map · Favorites · Profile (icons only). */
+/** Instagram-style bottom bar: Map · Search · Favorites · Profile (icons only). */
 export default function TabsLayout() {
   const { profile } = useProfile();
 
@@ -32,6 +32,19 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={focused ? "map" : "map-outline"}
+              size={25}
+              color={focused ? colors.tabActive : colors.tabInactive}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ focused }) => (
+            <Ionicons
+              name={focused ? "search" : "search-outline"}
               size={25}
               color={focused ? colors.tabActive : colors.tabInactive}
             />
