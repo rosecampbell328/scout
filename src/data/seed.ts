@@ -1,6 +1,6 @@
 import type { Pin } from "./types";
 
-/** A few starter pins around the US so the map isn't empty on first launch. */
+/** Starter pins around the US so the map isn't empty on first launch. */
 export const seedPins: Pin[] = [
   {
     id: "seed-1",
@@ -65,5 +65,70 @@ export const seedPins: Pin[] = [
     author: "Scout",
     ownerId: "scout",
     createdAt: Date.UTC(2026, 5, 5),
+  },
+  {
+    id: "seed-6",
+    title: "Baker Beach",
+    description:
+      "Golden Gate Bridge views from the sand. Fog rolls in after 4pm — embrace it.",
+    latitude: 37.7936,
+    longitude: -122.4836,
+    photoUri: null,
+    tags: ["coast", "bridge"],
+    author: "Scout",
+    ownerId: "scout",
+    createdAt: Date.UTC(2026, 5, 6),
+  },
+  {
+    id: "seed-7",
+    title: "Horseshoe Bend",
+    description:
+      "Dramatic canyon overlook. Shoot an hour after sunrise for even light in the bend.",
+    latitude: 36.8791,
+    longitude: -111.5104,
+    photoUri: null,
+    tags: ["desert", "adventure"],
+    author: "Scout",
+    ownerId: "scout",
+    createdAt: Date.UTC(2026, 5, 7),
+  },
+  {
+    id: "seed-8",
+    title: "Garden of the Gods",
+    description:
+      "Red sandstone towers with Pikes Peak behind. Free parking, busy on weekends.",
+    latitude: 38.8784,
+    longitude: -104.8698,
+    photoUri: null,
+    tags: ["mountains", "golden hour"],
+    author: "Scout",
+    ownerId: "scout",
+    createdAt: Date.UTC(2026, 5, 8),
+  },
+  {
+    id: "seed-9",
+    title: "Chicago Riverwalk",
+    description:
+      "Bridges, glass towers and river reflections. Blue hour is magic here.",
+    latitude: 41.888,
+    longitude: -87.6256,
+    photoUri: null,
+    tags: ["city", "blue hour"],
+    author: "Scout",
+    ownerId: "scout",
+    createdAt: Date.UTC(2026, 5, 9),
+  },
+  {
+    id: "seed-10",
+    title: "Wynwood Walls",
+    description:
+      "Huge colorful murals. Check the entry hours; the surrounding streets are free.",
+    latitude: 25.801,
+    longitude: -80.1993,
+    photoUri: null,
+    tags: ["urban", "color"],
+    author: "Scout",
+    ownerId: "scout",
+    createdAt: Date.UTC(2026, 5, 10),
   },
 ];

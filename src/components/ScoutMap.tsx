@@ -1,5 +1,5 @@
-import type { Ref } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { useState, type Ref } from "react";
+import { Image, Platform, StyleSheet } from "react-native";
 import MapView, { Marker, type Region } from "react-native-maps";
 
 import type { Pin } from "@/data/types";
@@ -8,7 +8,8 @@ import { mapStyle } from "@/theme/mapStyle";
 export type ScoutMapRef = MapView;
 
 const PIN_IMAGE = require("@/assets/images/pin.png");
-/** Height of pin.png in points. */
+/** Size of pin.png in points. */
+const PIN_WIDTH = 26;
 const PIN_HEIGHT = 38;
 
 /** Roughly centered on the contiguous United States. */
@@ -52,17 +53,41 @@ export function ScoutMap({
       onLongPress={(e) => onLongPress(e.nativeEvent.coordinate)}
     >
       {pins.map((pin) => (
-        <Marker
-          key={pin.id}
-          coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
-          image={PIN_IMAGE}
-          // Put the pin's tip (bottom center) on the coordinate.
-          anchor={{ x: 0.5, y: 1 }}
-          centerOffset={{ x: 0, y: -PIN_HEIGHT / 2 }}
-          stopPropagation
-          onPress={() => onPinPress(pin)}
-        />
+        <PinMarker key={pin.id} pin={pin} onPress={() => onPinPress(pin)} />
       ))}
     </MapView>
   );
 }
+
+/**
+ * Red teardrop pin, drawn as a child view rather than the Marker `image`
+ * prop: on iOS that prop loads through the legacy bridge, which doesn't
+ * exist under the New Architecture, so the pin never appears.
+ */
+function PinMarker({ pin, onPress }: { pin: Pin; onPress: () => void }) {
+  // Android snapshots custom marker views; keep tracking until the image
+  // has loaded so the pin isn't captured blank, then stop for performance.
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+  return (
+    <Marker
+      coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
+      // Put the pin's tip (bottom center) on the coordinate.
+      anchor={{ x: 0.5, y: 1 }}
+      centerOffset={{ x: 0, y: -PIN_HEIGHT / 2 }}
+      tracksViewChanges={tracksViewChanges}
+      stopPropagation
+      onPress={onPress}
+    >
+      <Image
+        source={PIN_IMAGE}
+        style={styles.pin}
+        onLoad={() => setTracksViewChanges(false)}
+      />
+    </Marker>
+  );
+}
+
+const styles = StyleSheet.create({
+  pin: { width: PIN_WIDTH, height: PIN_HEIGHT },
+});
