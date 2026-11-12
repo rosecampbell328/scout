@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View, type ViewStyle } from "react-native";
 
@@ -7,9 +8,12 @@ import { colors, fonts } from "@/theme";
 export function PinPhoto({
   uri,
   style,
+  compact = false,
 }: {
   uri: string | null;
   style?: ViewStyle;
+  /** Small thumbnail: show an icon instead of the "no photo yet" caption. */
+  compact?: boolean;
 }) {
   if (uri) {
     return (
@@ -25,7 +29,11 @@ export function PinPhoto({
   }
   return (
     <View style={[styles.fill, styles.placeholder, style]}>
-      <Text style={styles.placeholderText}>no photo yet</Text>
+      {compact ? (
+        <Ionicons name="image-outline" size={20} color={colors.textMuted} />
+      ) : (
+        <Text style={styles.placeholderText}>no photo yet</Text>
+      )}
     </View>
   );
 }

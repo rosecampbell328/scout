@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { PinGrid } from "@/components/PinGrid";
 import { ProfileHeader } from "@/components/ProfileHeader";
 import { usePins } from "@/data/pins";
+import { getPerson } from "@/data/people";
 import { useProfile } from "@/data/profile";
 import { ME } from "@/data/types";
 import { colors, fonts, spacing } from "@/theme";
@@ -16,11 +17,11 @@ export default function UserProfile() {
 
   const theirPins = pins.filter((p) => p.ownerId === id);
   const isMe = id === ME;
-  // Until accounts exist, other photographers' names come from their pins.
+  const person = isMe ? undefined : getPerson(id);
   const businessName = isMe
     ? profile.businessName
-    : (theirPins[0]?.author ?? "Photographer");
-  const realName = isMe ? profile.realName : "";
+    : (person?.businessName ?? theirPins[0]?.author ?? "Photographer");
+  const realName = isMe ? profile.realName : (person?.realName ?? "");
 
   return (
     <View style={styles.container}>
@@ -33,6 +34,8 @@ export default function UserProfile() {
             photoUri={isMe ? profile.photoUri : null}
             businessName={businessName}
             realName={realName}
+            city={person?.city}
+            bio={person?.bio}
             stats={[{ value: theirPins.length, label: "Pins" }]}
             sectionLabel={isMe ? "Pins you created" : "Pins"}
           />

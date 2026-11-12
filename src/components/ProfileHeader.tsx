@@ -4,10 +4,15 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, fonts, labelText, spacing } from "@/theme";
 
+import { Avatar } from "./Avatar";
+
 type Props = {
   photoUri: string | null;
   businessName: string;
   realName: string;
+  /** Extra lines for other photographers' profiles. */
+  city?: string;
+  bio?: string;
   stats: { value: number; label: string }[];
   sectionLabel: string;
   /** Your own profile: show prompts for missing details and make the photo tappable. */
@@ -19,6 +24,8 @@ export function ProfileHeader({
   photoUri,
   businessName,
   realName,
+  city,
+  bio,
   stats,
   sectionLabel,
   onEdit,
@@ -34,14 +41,16 @@ export function ProfileHeader({
         >
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.avatar} />
-          ) : (
+          ) : editable ? (
             <View style={[styles.avatar, styles.avatarEmpty]}>
               <Ionicons
-                name={editable ? "camera-outline" : "person-outline"}
+                name="camera-outline"
                 size={28}
                 color={colors.textMuted}
               />
             </View>
+          ) : (
+            <Avatar uri={null} name={businessName} size={92} />
           )}
         </Pressable>
         <View style={styles.stats}>
@@ -66,6 +75,13 @@ export function ProfileHeader({
           </Text>
         ) : null}
       </View>
+
+      {city || bio ? (
+        <View style={styles.extra}>
+          {city ? <Text style={[labelText, styles.city]}>{city}</Text> : null}
+          {bio ? <Text style={styles.bio}>{bio}</Text> : null}
+        </View>
+      ) : null}
 
       <Text style={[labelText, styles.sectionLabel]}>{sectionLabel}</Text>
     </View>
@@ -100,6 +116,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   missing: { color: colors.accentSoft },
+  extra: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: 6 },
+  city: { fontSize: 10, color: colors.textMuted },
+  bio: {
+    fontFamily: fonts.bodyLight,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.text,
+  },
   sectionLabel: {
     fontSize: 10,
     color: colors.textMuted,

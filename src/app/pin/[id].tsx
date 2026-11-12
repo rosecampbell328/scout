@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
+  Alert,
   Linking,
   Platform,
   Pressable,
@@ -13,11 +14,12 @@ import {
 import { Button } from "@/components/Button";
 import { PinPhoto } from "@/components/PinPhoto";
 import { usePins } from "@/data/pins";
+import { ME } from "@/data/types";
 import { colors, fonts, labelText, spacing } from "@/theme";
 
 export default function PinDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getPin, isFavorite, toggleFavorite } = usePins();
+  const { getPin, isFavorite, toggleFavorite, deletePin } = usePins();
   const pin = getPin(id);
 
   if (!pin) {
@@ -29,6 +31,25 @@ export default function PinDetail() {
   }
 
   const favorite = isFavorite(pin.id);
+  const isMine = pin.ownerId === ME;
+
+  const confirmDelete = () => {
+    const remove = () => {
+      if (router.canGoBack()) router.back();
+      else router.replace("/");
+      deletePin(pin.id);
+    };
+    const message = "This removes the pin and its photo from Scout.";
+    if (Platform.OS === "web") {
+      // Alert buttons aren't supported in the browser.
+      if (window.confirm(`Delete “${pin.title}”? ${message}`)) remove();
+      return;
+    }
+    Alert.alert(`Delete “${pin.title}”?`, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: remove },
+    ]);
+  };
 
   const openDirections = () => {
     const { latitude: lat, longitude: lng } = pin;
@@ -96,6 +117,31 @@ export default function PinDetail() {
           onPress={openDirections}
           style={{ marginTop: spacing.lg }}
         />
+
+        {isMine && (
+          <View style={styles.ownerActions}>
+            <Button
+              title="Edit location"
+              variant="outline"
+              style={styles.ownerButton}
+              onPress={() =>
+                router.push({ pathname: "/add", params: { id: pin.id } })
+              }
+            />
+            <Pressable
+              onPress={confirmDelete}
+              style={({ pressed }) => [
+                styles.ownerButton,
+                styles.deleteButton,
+                pressed && { opacity: 0.7 },
+              ]}
+              accessibilityRole="button"
+            >
+              <Ionicons name="trash-outline" size={15} color={colors.pin} />
+              <Text style={[labelText, { color: colors.pin }]}>Delete</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -119,6 +165,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  ownerActions: { flexDirection: "row", gap: spacing.sm },
+  ownerButton: { flex: 1 },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.pin,
   },
   address: {
     flex: 1,
