@@ -1,10 +1,12 @@
-import { useRef } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import type { Ref } from "react";
+import { Platform, StyleSheet } from "react-native";
 import MapView, { Marker, type Region } from "react-native-maps";
 
 import type { Pin } from "@/data/types";
-import { colors, palette } from "@/theme";
+import { colors } from "@/theme";
 import { mapStyle } from "@/theme/mapStyle";
+
+export type ScoutMapRef = MapView;
 
 /** Roughly centered on the contiguous United States. */
 export const US_REGION: Region = {
@@ -15,18 +17,25 @@ export const US_REGION: Region = {
 };
 
 type Props = {
+  ref?: Ref<ScoutMapRef>;
   pins: Pin[];
   onPinPress: (pin: Pin) => void;
   onLongPress: (coord: { latitude: number; longitude: number }) => void;
+  onMapPress?: () => void;
   showsUserLocation?: boolean;
 };
 
-export function ScoutMap({ pins, onPinPress, onLongPress, showsUserLocation }: Props) {
-  const mapRef = useRef<MapView>(null);
-
+export function ScoutMap({
+  ref,
+  pins,
+  onPinPress,
+  onLongPress,
+  onMapPress,
+  showsUserLocation,
+}: Props) {
   return (
     <MapView
-      ref={mapRef}
+      ref={ref}
       style={StyleSheet.absoluteFill}
       initialRegion={US_REGION}
       mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"}
@@ -36,38 +45,18 @@ export function ScoutMap({ pins, onPinPress, onLongPress, showsUserLocation }: P
       showsPointsOfInterests={false}
       showsCompass={false}
       toolbarEnabled={false}
+      onPress={onMapPress}
       onLongPress={(e) => onLongPress(e.nativeEvent.coordinate)}
     >
       {pins.map((pin) => (
         <Marker
           key={pin.id}
           coordinate={{ latitude: pin.latitude, longitude: pin.longitude }}
+          pinColor={colors.pin}
+          stopPropagation
           onPress={() => onPinPress(pin)}
-          tracksViewChanges={false}
-          anchor={{ x: 0.5, y: 0.5 }}
-        >
-          <View style={styles.pinOuter}>
-            <View style={styles.pinInner} />
-          </View>
-        </Marker>
+        />
       ))}
     </MapView>
   );
 }
-
-const styles = StyleSheet.create({
-  pinOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: palette.ivory,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: palette.ink,
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  pinInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent },
-});

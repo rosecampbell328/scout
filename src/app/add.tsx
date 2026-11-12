@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/Button";
 import { PinPhoto } from "@/components/PinPhoto";
 import { usePins } from "@/data/pins";
+import { useProfile } from "@/data/profile";
 import { colors, fonts, labelText, spacing } from "@/theme";
 
 type Coord = { latitude: number; longitude: number };
@@ -25,14 +26,16 @@ type Coord = { latitude: number; longitude: number };
 export default function AddPin() {
   const params = useLocalSearchParams<{ lat?: string; lng?: string }>();
   const { addPin } = usePins();
+  const { displayName } = useProfile();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
-  const [author, setAuthor] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [coord, setCoord] = useState<Coord | null>(
-    params.lat && params.lng ? { latitude: Number(params.lat), longitude: Number(params.lng) } : null,
+    params.lat && params.lng
+      ? { latitude: Number(params.lat), longitude: Number(params.lng) }
+      : null,
   );
   const [locating, setLocating] = useState(coord === null);
 
@@ -77,7 +80,7 @@ export default function AddPin() {
         .split(",")
         .map((t) => t.trim().toLowerCase())
         .filter(Boolean),
-      author: author.trim() || "Anonymous",
+      author: displayName,
       photoUri,
       ...coord,
     });
@@ -85,9 +88,20 @@ export default function AddPin() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={pickPhoto} accessibilityRole="button" accessibilityLabel="Add a photo">
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Pressable
+          onPress={pickPhoto}
+          accessibilityRole="button"
+          accessibilityLabel="Add a photo"
+        >
           {photoUri ? (
             <PinPhoto uri={photoUri} />
           ) : (
@@ -100,12 +114,22 @@ export default function AddPin() {
         </Pressable>
         {photoUri && (
           <Pressable onPress={pickPhoto} style={styles.changePhoto}>
-            <Text style={[labelText, { fontSize: 10, color: colors.textMuted }]}>Change photo</Text>
+            <Text
+              style={[labelText, { fontSize: 10, color: colors.textMuted }]}
+            >
+              Change photo
+            </Text>
           </Pressable>
         )}
 
         <Field label="Location name">
-          <TextInput value={title} onChangeText={setTitle} placeholder="e.g. Wildflower meadow" placeholderTextColor={colors.accentSoft} style={styles.input} />
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="e.g. Wildflower meadow"
+            placeholderTextColor={colors.accentSoft}
+            style={styles.input}
+          />
         </Field>
 
         <Field label="Notes">
@@ -120,11 +144,14 @@ export default function AddPin() {
         </Field>
 
         <Field label="Tags">
-          <TextInput value={tags} onChangeText={setTags} placeholder="golden hour, florals, urban" placeholderTextColor={colors.accentSoft} style={styles.input} autoCapitalize="none" />
-        </Field>
-
-        <Field label="Your name">
-          <TextInput value={author} onChangeText={setAuthor} placeholder="Photographer name" placeholderTextColor={colors.accentSoft} style={styles.input} />
+          <TextInput
+            value={tags}
+            onChangeText={setTags}
+            placeholder="golden hour, florals, urban"
+            placeholderTextColor={colors.accentSoft}
+            style={styles.input}
+            autoCapitalize="none"
+          />
         </Field>
 
         <Field label="Coordinates">
@@ -133,16 +160,27 @@ export default function AddPin() {
               <ActivityIndicator color={colors.accent} />
             ) : (
               <Text style={styles.coordText}>
-                {coord ? `${coord.latitude.toFixed(4)}°, ${coord.longitude.toFixed(4)}°` : "Not set"}
+                {coord
+                  ? `${coord.latitude.toFixed(4)}°, ${coord.longitude.toFixed(4)}°`
+                  : "Not set"}
               </Text>
             )}
             <Pressable onPress={locateMe} hitSlop={8}>
-              <Text style={[labelText, { fontSize: 10, color: colors.accent }]}>Use my location</Text>
+              <Text style={[labelText, { fontSize: 10, color: colors.accent }]}>
+                Use my location
+              </Text>
             </Pressable>
           </View>
         </Field>
 
-        <Button title="Pin this location" onPress={save} disabled={!canSave} style={{ marginTop: spacing.lg }} />
+        <Text style={styles.postingAs}>posting as {displayName}</Text>
+
+        <Button
+          title="Pin this location"
+          onPress={save}
+          disabled={!canSave}
+          style={{ marginTop: spacing.sm }}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -152,18 +190,32 @@ async function getMyCoord(): Promise<Coord | null> {
   try {
     const { granted } = await Location.requestForegroundPermissionsAsync();
     if (!granted) {
-      Alert.alert("Location off", "Allow location access, or long-press the map to drop a pin instead.");
+      Alert.alert(
+        "Location off",
+        "Allow location access, or long-press the map to drop a pin instead.",
+      );
       return null;
     }
-    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const pos = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
     return { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
   } catch {
-    Alert.alert("Couldn't find you", "Try again, or long-press the map to drop a pin.");
+    Alert.alert(
+      "Couldn't find you",
+      "Try again, or long-press the map to drop a pin.",
+    );
     return null;
   }
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <View style={styles.field}>
       <Text style={[labelText, styles.fieldLabel]}>{label}</Text>
@@ -186,11 +238,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.sm,
   },
-  photoPlus: { fontFamily: fonts.display, fontSize: 48, color: colors.textMuted, lineHeight: 52 },
-  photoHint: { fontFamily: fonts.displayItalic, fontSize: 16, color: colors.textMuted },
+  photoPlus: {
+    fontFamily: fonts.display,
+    fontSize: 48,
+    color: colors.textMuted,
+    lineHeight: 52,
+  },
+  photoHint: {
+    fontFamily: fonts.displayItalic,
+    fontSize: 16,
+    color: colors.textMuted,
+  },
   changePhoto: { alignSelf: "center", padding: spacing.sm },
   field: { marginTop: spacing.lg },
-  fieldLabel: { fontSize: 10, color: colors.textMuted, marginBottom: spacing.xs },
+  fieldLabel: {
+    fontSize: 10,
+    color: colors.textMuted,
+    marginBottom: spacing.xs,
+  },
   input: {
     fontFamily: fonts.body,
     fontSize: 16,
@@ -208,6 +273,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: colors.text,
     minHeight: 40,
+  },
+  postingAs: {
+    fontFamily: fonts.displayItalic,
+    fontSize: 16,
+    color: colors.textMuted,
+    marginTop: spacing.lg,
   },
   coordText: { fontFamily: fonts.body, fontSize: 16, color: colors.text },
 });

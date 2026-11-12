@@ -1,4 +1,10 @@
-import { Pressable, StyleSheet, Text, type PressableProps, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  type PressableProps,
+  type ViewStyle,
+} from "react-native";
 
 import { colors, labelText } from "@/theme";
 
@@ -9,7 +15,13 @@ type Props = Omit<PressableProps, "style"> & {
 };
 
 /** Square-edged, uppercase, letter-spaced button. */
-export function Button({ title, variant = "solid", style, disabled, ...rest }: Props) {
+export function Button({
+  title,
+  variant = "solid",
+  style,
+  disabled,
+  ...rest
+}: Props) {
   const solid = variant === "solid";
   return (
     <Pressable
@@ -23,7 +35,11 @@ export function Button({ title, variant = "solid", style, disabled, ...rest }: P
       ]}
       {...rest}
     >
-      <Text style={[labelText, { color: solid ? colors.buttonText : colors.text }]}>{title}</Text>
+      <Text
+        style={[labelText, { color: solid ? colors.buttonText : colors.text }]}
+      >
+        {title}
+      </Text>
     </Pressable>
   );
 }
@@ -36,5 +52,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   solid: { backgroundColor: colors.button },
-  outline: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.text, backgroundColor: "transparent" },
+  outline: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.text,
+    backgroundColor: "transparent",
+  },
 });

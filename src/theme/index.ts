@@ -33,6 +33,10 @@ export const colors = {
   button: palette.charcoal,
   buttonText: palette.ivory,
   placeholder: palette.mist,
+  /** Map pins and the favorite heart. */
+  pin: "#C8352B",
+  tabActive: palette.ink,
+  tabInactive: palette.taupe,
 } as const;
 
 export const fonts = {
@@ -44,7 +48,14 @@ export const fonts = {
   label: "Jost_500Medium",
 } as const;
 
-export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 } as const;
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+} as const;
 
 /** Uppercase, widely-tracked label style used for nav, buttons and captions. */
 export const labelText = {
