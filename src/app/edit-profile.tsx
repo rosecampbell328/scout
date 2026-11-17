@@ -16,10 +16,12 @@ import {
 
 import { Button } from "@/components/Button";
 import { useProfile } from "@/data/profile";
+import { useSession } from "@/data/session";
 import { colors, fonts, labelText, spacing } from "@/theme";
 
 export default function EditProfile() {
   const { profile, updateProfile } = useProfile();
+  const { account, signOut } = useSession();
   const [photoUri, setPhotoUri] = useState(profile.photoUri);
   const [businessName, setBusinessName] = useState(profile.businessName);
   const [realName, setRealName] = useState(profile.realName);
@@ -98,12 +100,26 @@ export default function EditProfile() {
         </View>
 
         <Button title="Save" onPress={save} style={{ marginTop: spacing.xl }} />
+
+        <View style={styles.accountBox}>
+          {account ? (
+            <Text style={styles.accountText}>Signed in as {account.email}</Text>
+          ) : null}
+          <Button title="Log out" variant="outline" onPress={signOut} />
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  accountBox: { marginTop: spacing.xxl, gap: spacing.sm },
+  accountText: {
+    fontFamily: fonts.bodyLight,
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: "center",
+  },
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   photoWrap: {
